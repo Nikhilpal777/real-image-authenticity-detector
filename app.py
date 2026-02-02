@@ -4,6 +4,9 @@ import numpy as np
 from tensorflow.keras.preprocessing import image
 import os
 
+# heatmap functions
+from gradcam import make_occlusion_heatmap, overlay_heatmap
+
 app = Flask(__name__)
 
 UPLOAD_FOLDER = "static/uploads"
@@ -26,6 +29,7 @@ def index():
     result = None
     confidence = None
     uploaded_image = None
+    heatmap_image = None
 
     if request.method == "POST":
         file = request.files["image"]
@@ -54,15 +58,19 @@ def index():
 
         uploaded_image = path
 
+        
+        heatmap = make_occlusion_heatmap(img_array, model)
+        heatmap_image = overlay_heatmap(path, heatmap)
+
     return render_template(
         "index.html",
         result=result,
         confidence=confidence,
-        uploaded_image=uploaded_image
+        uploaded_image=uploaded_image,
+        heatmap_image=heatmap_image
     )
 
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
